@@ -3,8 +3,11 @@
   "version": "0.1.0",
   "description": "Scraping, decompiling and debundling Discord mobile app",
   "type": "module",
+  "imports": {
+    "#src/*": "./src/*"
+  },
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch src/index.ts --steps scraper,unpacker,debundler",
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
@@ -14,14 +17,15 @@
     "check": "npm run typecheck && npm run lint && npm run format:check"
   },
   "devDependencies": {
-    "@types/node": "^26.1.0",
+    "@types/node": "^26.1.2",
     "@types/pino": "^7.0.4",
+    "@typescript/native": "npm:typescript@^7.0.2",
     "eslint": "^9.27.0",
     "eslint-config-prettier": "^10.1.5",
     "prettier": "^3.6.2",
     "tsx": "^4.20.5",
-    "typescript": "^5.9.2",
-    "typescript-eslint": "^8.47.0"
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-eslint": "^8.65.0"
   },
   "dependencies": {
     "pino": "^10.3.1",
