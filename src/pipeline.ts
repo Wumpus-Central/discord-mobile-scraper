@@ -7,6 +7,13 @@ export interface PipelineContext {
 
 export type StepHandler = (ctx: PipelineContext) => Promise<PipelineContext>;
 
+export class PipelineStopError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PipelineStopError";
+  }
+}
+
 interface Step {
   name: string;
   handler: StepHandler;
@@ -42,6 +49,11 @@ export class Pipeline {
         const took = Date.now() - stepStartedAt;
         stepLog.info(`Step completed (${took}ms)`);
       } catch (err) {
+        if (err instanceof PipelineStopError) {
+          const took = Date.now() - stepStartedAt;
+          stepLog.info(`Step stopped (${took}ms): ${err.message}`);
+          return ctx;
+        }
         const took = Date.now() - stepStartedAt;
         stepLog.error(err as Error, `Step failed (${took}ms)`);
         throw err;
