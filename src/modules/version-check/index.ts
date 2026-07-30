@@ -42,12 +42,12 @@ export const versionCheck: StepHandler = async (ctx) => {
   log.info({ oldVersion }, "Loaded previous alpha version from Opengist");
 
   if (oldVersion === newVersion) {
-    throw new PipelineStopError(`No update — alpha ${oldVersion} unchanged`);
+    throw new PipelineStopError(`No update. Alpha ${oldVersion} unchanged`);
   }
 
   ctx.state = { ...ctx.state, newVersion };
 
-  log.info(`Update available: alpha ${oldVersion} → ${newVersion}`);
+  log.info(`Update available: ${oldVersion} → ${newVersion}`);
 
   return ctx;
 };
