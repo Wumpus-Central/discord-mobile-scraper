@@ -7,7 +7,7 @@
     "#src/*": "./src/*"
   },
   "scripts": {
-    "dev": "tsx --env-file=.env watch src/index.ts --steps scraper,unpacker,debundler",
+    "dev": "node --env-file=.env --import tsx/esm --watch src/index.ts --steps scraper,unpacker,debundler",
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
