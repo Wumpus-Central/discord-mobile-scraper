@@ -2,9 +2,7 @@ import { logger } from "#src/logger.js";
 import type { StepHandler } from "#src/pipeline.js";
 import { PipelineStopError } from "#src/pipeline.js";
 import { readState } from "#src/modules/opengist/index.js";
-
-const TRACKER_URL = "https://tracker.vendetta.rocks/tracker/index";
-const USER_AGENT = "Wumpus Central <https://github.com/Wumpus-Central/discord-mobile-scrapper>";
+import { VENDETTA_TRACKER, USER_AGENT } from "#src/modules/vendetta/index.js";
 
 interface TrackerResponse {
   latest: Record<string, number>;
@@ -15,7 +13,7 @@ const log = logger.child({ module: "version-check" });
 export const versionCheck: StepHandler = async (ctx) => {
   log.info("Checking for alpha update...");
 
-  const res = await fetch(TRACKER_URL, {
+  const res = await fetch(`${VENDETTA_TRACKER}/tracker/index`, {
     headers: { "User-Agent": USER_AGENT },
   });
 
