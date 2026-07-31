@@ -147,3 +147,6 @@ AGENTS.md
 .opencode/
 opencode.json
 opencode.jsonc
+
+# Workspace
+workspace/
