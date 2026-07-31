@@ -7,7 +7,7 @@
     "#src/*": "./src/*"
   },
   "scripts": {
-    "dev": "node --env-file=.env --import tsx/esm --watch src/index.ts --steps version-check",
+    "dev": "node --env-file=.env --import tsx/esm --watch src/index.ts --steps version-check,scraper,unpacker",
     "start": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
@@ -17,6 +17,7 @@
     "check": "npm run typecheck && npm run lint && npm run format:check"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.8",
     "@types/node": "^26.1.2",
     "@types/pino": "^7.0.4",
     "@typescript/native": "npm:typescript@^7.0.2",
@@ -28,6 +29,7 @@
     "typescript-eslint": "^8.65.0"
   },
   "dependencies": {
+    "adm-zip": "^0.6.0",
     "pino": "^10.3.1",
     "pino-pretty": "^13.1.3"
   }
