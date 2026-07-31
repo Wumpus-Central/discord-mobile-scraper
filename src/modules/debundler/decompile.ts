@@ -6,13 +6,20 @@ const log = logger.child({ module: "debundler" });
 
 const HERMES_DECOMP = resolve(process.cwd(), "bin", "hermes-decomp");
 
-export async function decompileBundle(bundlePath: string, outputPath: string): Promise<void> {
+export interface DecompileResult {
+  hermesVersion: string;
+}
+
+const PARSED_RE = /parsed: HBC v(\d+)/;
+
+export async function decompileBundle(bundlePath: string, outputPath: string): Promise<DecompileResult> {
   const { execFile } = await import("node:child_process");
 
   log.info({ bundlePath, outputPath }, "Decompiling Hermes bundle");
 
   return new Promise((resolve, reject) => {
     const args = ["decompile", bundlePath, "-o", outputPath];
+    const stderr: string[] = [];
 
     log.info({ command: `${HERMES_DECOMP} ${args.join(" ")}` }, "Launching Hermes decompiler");
 
@@ -21,7 +28,9 @@ export async function decompileBundle(bundlePath: string, outputPath: string): P
     });
 
     child.stderr?.on("data", (data: string) => {
-      log.info(data.toString().trim());
+      const text = data.toString().trim();
+      stderr.push(text);
+      log.info(text);
     });
 
     child.on("error", (err: Error) => {
@@ -32,7 +41,18 @@ export async function decompileBundle(bundlePath: string, outputPath: string): P
     child.on("exit", (code: number | null, signal: string | null) => {
       if (code === 0) {
         log.info("Decompilation complete");
-        resolve();
+
+        let hermesVersion = "?0";
+
+        for (const line of stderr) {
+          const match = PARSED_RE.exec(line);
+          if (match) {
+            hermesVersion = match[1] ?? "?0";
+            break;
+          }
+        }
+
+        resolve({ hermesVersion });
       } else if (signal) {
         reject(new Error(`Hermes decompiler was killed by signal ${signal}`));
       } else {
