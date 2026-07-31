@@ -14,7 +14,7 @@ export class ProgressTracker {
     private label: string,
     private logger: Logger,
   ) {
-    this.interval = setInterval(() => this.report(), 1000);
+    this.interval = setInterval(() => this.report(), 2500);
   }
 
   add(bytes: number): void {

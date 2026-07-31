@@ -22,19 +22,21 @@ export const unpacker: StepHandler = async (ctx) => {
     throw new Error(`No .zip files found in ${apkPath}`);
   }
 
+  const unpackedPath = join(apkPath, "apk");
+
   log.info(`Unpacking ${zips.length} APK split(s)...`);
 
   for (const zipFile of zips) {
     const zipPath = join(apkPath, zipFile);
     log.info(`Extracting ${zipFile}`);
-    await extractZip(zipPath, apkPath);
+    await extractZip(zipPath, unpackedPath);
     await rm(zipPath);
     log.info(`Removed ${zipFile}`);
   }
 
-  ctx.state = { ...ctx.state, unpackedPath: apkPath };
+  ctx.state = { ...ctx.state, unpackedPath };
 
-  log.info(`Unpacker complete — extracted to ${apkPath}`);
+  log.info(`Unpacker complete — extracted to ${unpackedPath}`);
 
   return ctx;
 };

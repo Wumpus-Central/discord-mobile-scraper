@@ -150,3 +150,6 @@ opencode.jsonc
 
 # Workspace
 workspace/
+
+# Binaries
+bin/

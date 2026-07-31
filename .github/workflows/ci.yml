@@ -18,4 +18,9 @@ jobs:
           node-version: 26
 
       - run: npm ci
+      - run: npm run setup
       - run: npm start
+        env:
+          OPENGIST_URL: ${{ secrets.OPENGIST_URL }}
+          OPENGIST_TOKEN: ${{ secrets.OPENGIST_TOKEN }}
+          OPENGIST_GIST_ID: ${{ secrets.OPENGIST_GIST_ID }}
