@@ -25,7 +25,7 @@ export async function readState(): Promise<State> {
   return state;
 }
 
-export async function writeState(state: State): Promise<void> {
+export async function writeState(state: unknown): Promise<void> {
   const gistId = process.env["OPENGIST_GIST_ID"];
   if (!gistId) {
     throw new Error("OPENGIST_GIST_ID is not set");

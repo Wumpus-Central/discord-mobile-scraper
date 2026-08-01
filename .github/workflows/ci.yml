@@ -1,10 +1,7 @@
 name: Run
 
-#on:
-#  push:
-#  branches: [main, master]
-#  pull_request:
-#  branches: [main, master]
+on:
+  workflow_dispatch:
 
 jobs:
   run:
@@ -24,3 +21,4 @@ jobs:
           OPENGIST_URL: ${{ secrets.OPENGIST_URL }}
           OPENGIST_TOKEN: ${{ secrets.OPENGIST_TOKEN }}
           OPENGIST_GIST_ID: ${{ secrets.OPENGIST_GIST_ID }}
+          DISCORD_SOURCE_TOKEN: ${{ secrets.DISCORD_SOURCE_TOKEN }}
