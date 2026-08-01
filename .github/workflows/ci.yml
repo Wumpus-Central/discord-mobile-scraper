@@ -21,4 +21,4 @@ jobs:
           OPENGIST_URL: ${{ secrets.OPENGIST_URL }}
           OPENGIST_TOKEN: ${{ secrets.OPENGIST_TOKEN }}
           OPENGIST_GIST_ID: ${{ secrets.OPENGIST_GIST_ID }}
-          DISCORD_SOURCE_TOKEN: ${{ secrets.DISCORD_SOURCE_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}

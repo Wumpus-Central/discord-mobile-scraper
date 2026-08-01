@@ -5,7 +5,6 @@ import { logger } from "#src/logger.js";
 import type { StepHandler } from "#src/pipeline.js";
 import type { ParsedVersion } from "#src/utils/discord-version.js";
 import { parseVersion } from "#src/utils/discord-version.js";
-import { fetchTrackerIndex } from "#src/modules/vendetta/tracker.js";
 import { writeState } from "#src/modules/opengist/index.js";
 
 const log = logger.child({ module: "state-writer" });
@@ -63,9 +62,9 @@ export const stateWriter: StepHandler = async (ctx) => {
     ctx.state = { ...ctx.state, version, sourcePath };
   }
 
-  const token = process.env["DISCORD_SOURCE_TOKEN"];
+  const token = process.env["GH_TOKEN"];
   if (!token) {
-    throw new Error("DISCORD_SOURCE_TOKEN is not set");
+    throw new Error("GH_TOKEN is not set");
   }
 
   const remote = `https://x-access-token:${token}@github.com/Wumpus-Central/discord-mobile-datamining.git`;
@@ -113,8 +112,12 @@ export const stateWriter: StepHandler = async (ctx) => {
 
   log.info("Pushed to GitHub");
 
-  const trackerState = await fetchTrackerIndex();
-  await writeState(trackerState);
+  await writeState({
+    alpha: version.raw,
+    major: version.major,
+    minor: version.minor,
+    stats: ctx.state["stats"],
+  });
 
   log.info("State saved to Opengist");
 
