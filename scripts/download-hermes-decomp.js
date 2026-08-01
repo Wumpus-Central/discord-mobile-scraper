@@ -1,5 +1,5 @@
 import { createWriteStream } from "node:fs";
-import { chmod, mkdir } from "node:fs/promises";
+import { chmod, mkdir, rm } from "node:fs/promises";
 import { pipeline } from "node:stream/promises";
 import { resolve } from "node:path";
 import { execSync } from "node:child_process";
@@ -62,6 +62,8 @@ async function run() {
   execSync(`tar -xzf "${archivePath}" -C "${binPath}"`, { stdio: "inherit" });
 
   await chmod(resolve(binPath, "hermes-decomp"), 0o755);
+  await rm(archivePath, { force: true });
+  await rm(resolve(binPath, "hermes-mcp"), { force: true });
 
   console.log(`Installed to ${binPath}/hermes-decomp`);
 }
