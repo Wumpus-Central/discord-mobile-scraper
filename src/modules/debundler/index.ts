@@ -6,13 +6,13 @@ import { join, dirname } from "node:path";
 import { logger } from "#src/logger.js";
 import type { StepHandler } from "#src/pipeline.js";
 import { decompileBundle } from "./decompile.js";
-import { findLatestUnpacked } from "./workspace.js";
+import { findLatestWorkspace } from "#src/utils/workspace.js";
 import { parseModules, writeTree } from "./unbundle.js";
 
 const log = logger.child({ module: "debundler" });
 
 export const debundler: StepHandler = async (ctx) => {
-  const unpackedPath = (ctx.state["unpackedPath"] as string | undefined) ?? (await findLatestUnpacked());
+  const unpackedPath = (ctx.state["unpackedPath"] as string | undefined) ?? (await findLatestWorkspace("apk"));
 
   const root = dirname(unpackedPath);
   const bundlePath = join(unpackedPath, "assets", "index.android.bundle");

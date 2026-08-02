@@ -1,10 +1,8 @@
-import { readdir, access } from "node:fs/promises";
-import { join } from "node:path";
-
 import { logger } from "#src/logger.js";
 import type { StepHandler } from "#src/pipeline.js";
 import type { ParsedVersion } from "#src/utils/discord-version.js";
 import { parseVersion } from "#src/utils/discord-version.js";
+import { findLatestWorkspace } from "#src/utils/workspace.js";
 import { writeState } from "#src/modules/opengist/index.js";
 import { GitService } from "./git.js";
 
@@ -14,35 +12,13 @@ function commitMessage(version: ParsedVersion): string {
   return `${version.major}.${version.minor} (${version.raw})`;
 }
 
-async function findLatestSource(): Promise<{ version: ParsedVersion; sourcePath: string }> {
-  const dirs = await readdir("workspace").catch(() => [] as string[]);
-  const versions = dirs
-    .filter((d) => /^\d+$/.test(d))
-    .map(Number)
-    .sort((a, b) => b - a);
-
-  for (const raw of versions) {
-    const path = join("workspace", String(raw), "src");
-    try {
-      await access(path);
-      log.info({ version: raw, sourcePath: path }, "Found existing source tree");
-      return { version: parseVersion(raw), sourcePath: path };
-    } catch {
-      continue;
-    }
-  }
-
-  throw new Error("No source tree found in workspace — run debundler first");
-}
-
 export const stateWriter: StepHandler = async (ctx) => {
   let version = ctx.state["version"] as ParsedVersion | undefined;
   let sourcePath = ctx.state["sourcePath"] as string | undefined;
 
   if (!version || !sourcePath) {
-    const resolved = await findLatestSource();
-    version = resolved.version;
-    sourcePath = resolved.sourcePath;
+    sourcePath = await findLatestWorkspace("src");
+    version = parseVersion(parseInt(sourcePath.split("/")[1] ?? "0", 10));
     ctx.state = { ...ctx.state, version, sourcePath };
   }
 
