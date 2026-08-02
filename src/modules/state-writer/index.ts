@@ -6,6 +6,7 @@ import type { StepHandler } from "#src/pipeline.js";
 import type { ParsedVersion } from "#src/utils/discord-version.js";
 import { parseVersion } from "#src/utils/discord-version.js";
 import { writeState } from "#src/modules/opengist/index.js";
+import { simpleGit } from "simple-git";
 
 const log = logger.child({ module: "state-writer" });
 
@@ -14,20 +15,7 @@ function commitMessage(version: ParsedVersion): string {
 }
 
 async function git(args: string[], cwd: string): Promise<string> {
-  const { exec } = await import("node:child_process");
-
-  const shellArgs = args.map((a) => `'${a.replace(/'/g, "'\\''")}'`).join(" ");
-
-  return new Promise((resolve, reject) => {
-    exec(`git ${shellArgs}`, { cwd, maxBuffer: 50 * 1024 * 1024 }, (error, stdout, stderr) => {
-      if (error) {
-        log.error({ exitCode: error.code, stderr }, `git ${args[0]} failed`);
-        reject(new Error(`git ${args[0]} failed (exit ${error.code})`));
-      } else {
-        resolve(stdout.trim());
-      }
-    });
-  });
+  return (await simpleGit(cwd).raw(args)).trim();
 }
 
 async function findLatestSource(): Promise<{ version: ParsedVersion; sourcePath: string }> {
