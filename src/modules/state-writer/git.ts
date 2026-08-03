@@ -35,7 +35,19 @@ export class GitService {
   }
 
   async addAndCommit(message: string): Promise<boolean> {
-    await this.g.raw(["add", "-A"]);
+    await this.g.raw(["add", "."]);
+    await this.g.raw(["reset", "_runtime/"]);
+
+    const sourceOk = await this.commit(message);
+    const runtimeOk = await this.commit(`${message} runtime`, ["_runtime/"]);
+
+    return sourceOk || runtimeOk;
+  }
+
+  private async commit(message: string, addArgs?: string[]): Promise<boolean> {
+    if (addArgs) {
+      await this.g.raw(["add", ...addArgs]);
+    }
 
     try {
       await this.g.raw(["commit", "-m", message]);
