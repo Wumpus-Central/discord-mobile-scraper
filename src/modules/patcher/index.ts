@@ -9,19 +9,19 @@ import { actions } from "./actions/index.js";
 
 const log = logger.child({ module: "patcher" });
 
-async function applyActions(sourceDir: string): Promise<void> {
+async function applyActions(sourceDir: string, state: Record<string, unknown>): Promise<void> {
   for (const { name, run } of actions) {
     log.info(`Action: ${name}`);
-    await run(sourceDir);
+    await run(sourceDir, state);
   }
 }
 
-async function applyTransforms(filePath: string): Promise<void> {
+async function applyTransforms(filePath: string, state: Record<string, unknown>): Promise<void> {
   let content = await readFile(filePath, "utf8");
   let changed = false;
 
   for (const { fn } of transforms) {
-    const result = fn(content, filePath);
+    const result = fn(content, filePath, state);
     if (result !== content) {
       content = result;
       changed = true;
@@ -38,14 +38,14 @@ export const patcher: StepHandler = async (ctx) => {
 
   log.info("Applying patches");
 
-  await applyActions(sourceDir);
+  await applyActions(sourceDir, ctx.state);
 
   const files = (await readdir(sourceDir, { recursive: true })).filter((e) => /\.(js|tsx?)$/.test(e));
 
   log.info(`Processing ${files.length} files`);
 
   for (const relPath of files) {
-    await applyTransforms(join(sourceDir, relPath));
+    await applyTransforms(join(sourceDir, relPath), ctx.state);
   }
 
   log.info("Patches applied");

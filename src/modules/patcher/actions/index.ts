@@ -1,5 +1,5 @@
-import { helloAction } from "./action-hello.js";
+import { getModulesMap } from "./get-modules-map.js";
 
-export type Action = (sourceDir: string) => Promise<void>;
+export type Action = (sourceDir: string, state: Record<string, unknown>) => Promise<void>;
 
-export const actions = [{ name: "hello", run: helloAction }];
+export const actions = [{ name: "get-modules-map", run: getModulesMap }];
