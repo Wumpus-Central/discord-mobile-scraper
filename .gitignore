@@ -153,3 +153,6 @@ workspace/
 
 # Binaries
 bin/
+
+# VSCode
+.vscode
