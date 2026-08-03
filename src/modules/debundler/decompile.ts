@@ -24,7 +24,7 @@ export async function decompileBundle(bundlePath: string, outputPath: string): P
     log.info({ command: `${HERMES_DECOMP} ${args.join(" ")}` }, "Launching Hermes decompiler");
 
     const child = execFile(HERMES_DECOMP, args, {
-      timeout: 1_800_000, // 30min timeout
+      timeout: 5_400_000, // 90min timeout
     });
 
     child.stderr?.on("data", (data: string) => {
