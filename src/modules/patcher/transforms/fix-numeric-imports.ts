@@ -7,7 +7,7 @@ interface ModuleEntry {
   path: string;
 }
 
-const NUMERIC_REQUIRE_RE = /(?:require|importDefault)\((\d+)\)/g;
+const NUMERIC_REQUIRE_RE = /(?:require|importDefault)\((\d+)\)(?:\s*\/\*\s*\S+\s*\*\/)?/g;
 const MODULE_IMPORT_RE = /import module_(\d+) from "module_(\d+)"/g;
 
 function assertImportName(entry: ModuleEntry): string {
