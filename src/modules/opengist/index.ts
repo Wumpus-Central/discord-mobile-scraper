@@ -43,3 +43,22 @@ export async function writeState(state: unknown): Promise<void> {
 
   log.info("State written successfully");
 }
+
+export async function writeModulesMap(map: unknown): Promise<void> {
+  const gistId = process.env["OPENGIST_GIST_ID"];
+  if (!gistId) {
+    throw new Error("OPENGIST_GIST_ID is not set");
+  }
+
+  log.info("Writing modules map to Opengist");
+
+  await updateGist(gistId, {
+    files: {
+      "map.json": {
+        content: JSON.stringify(map, null, 2),
+      },
+    },
+  });
+
+  log.info("Modules map written successfully");
+}

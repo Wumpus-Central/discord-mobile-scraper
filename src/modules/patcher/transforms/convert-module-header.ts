@@ -4,9 +4,9 @@ export const convertModuleHeader: Transform = (content, filePath) => {
   const relPath = filePath.match(/src\/(.+)$/)?.[1] ?? filePath;
   const pathComment = `// ${relPath}\n`;
 
-  if (content.startsWith(pathComment)) return content;
+  const body = content.startsWith(pathComment) ? content.slice(pathComment.length) : content;
 
-  const lines = content.split("\n");
+  const lines = body.split("\n");
   const hasModuleHeader =
     lines.length >= 3 && lines[0]?.startsWith("// === Module") && lines[2]?.startsWith("// Module");
 
@@ -14,5 +14,5 @@ export const convertModuleHeader: Transform = (content, filePath) => {
     return pathComment + lines.slice(3).join("\n");
   }
 
-  return pathComment + content;
+  return content.startsWith(pathComment) ? content : pathComment + content;
 };
