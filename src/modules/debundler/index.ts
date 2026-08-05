@@ -1,6 +1,4 @@
-import { rm } from "node:fs/promises";
-import { mkdir } from "node:fs/promises";
-import { stat } from "node:fs/promises";
+import { rm, mkdir, stat, cp } from "node:fs/promises";
 import { join, dirname } from "node:path";
 
 import { logger } from "#src/logger.js";
@@ -31,6 +29,8 @@ export const debundler: StepHandler = async (ctx) => {
 
   const counters = await writeTree(modules, sourceTree);
   log.info({ source: counters.source, runtime: counters.runtime }, `Wrote ${counters.total} files to ${sourceTree}`);
+
+  await cp(sourceTree, join(root, "src-unpatched"), { recursive: true });
 
   await rm(sourceFile);
 
