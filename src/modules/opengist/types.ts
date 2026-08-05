@@ -1,7 +1,3 @@
-export interface State {
-  [key: string]: unknown;
-}
-
 export interface Gist {
   id: string;
   files: Record<string, GistFile>;

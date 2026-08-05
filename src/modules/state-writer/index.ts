@@ -3,7 +3,7 @@ import type { StepHandler } from "#src/pipeline.js";
 import type { ParsedVersion } from "#src/utils/discord-version.js";
 import { parseVersion } from "#src/utils/discord-version.js";
 import { findLatestWorkspace } from "#src/utils/workspace.js";
-import { writeModulesMap, writeState, readState } from "#src/modules/opengist/index.js";
+import { readGist, saveGist } from "#src/modules/opengist/index.js";
 import { GitService } from "./git.js";
 
 const log = logger.child({ module: "state-writer" });
@@ -43,9 +43,9 @@ export const stateWriter: StepHandler = async (ctx) => {
   await git.push("main");
   log.info("Pushed to GitHub");
 
-  const existing = await readState().catch((): Record<string, unknown> => ({}));
+  const existing = await readGist<Record<string, unknown>>("versions.json").catch((): Record<string, unknown> => ({}));
 
-  await writeState({
+  await saveGist("versions.json", {
     alpha: version.raw,
     major: version.major,
     minor: version.minor,
@@ -56,7 +56,7 @@ export const stateWriter: StepHandler = async (ctx) => {
 
   const modulesMap = ctx.state["modulesMap"];
   if (modulesMap !== undefined) {
-    await writeModulesMap(modulesMap);
+    await saveGist("map.json", modulesMap);
     log.info("Modules map saved to Opengist");
   }
 

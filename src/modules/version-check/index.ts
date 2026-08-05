@@ -1,7 +1,7 @@
 import { logger } from "#src/logger.js";
 import type { StepHandler } from "#src/pipeline.js";
 import { PipelineStopError } from "#src/pipeline.js";
-import { readState } from "#src/modules/opengist/index.js";
+import { readGist } from "#src/modules/opengist/index.js";
 import { fetchTrackerIndex } from "#src/modules/vendetta/tracker.js";
 import { parseVersion } from "#src/utils/discord-version.js";
 
@@ -19,7 +19,7 @@ export const versionCheck: StepHandler = async (ctx) => {
 
   log.info({ newVersion }, "Fetched latest alpha version from tracker");
 
-  const oldState = await readState();
+  const oldState = await readGist<Record<string, unknown>>("versions.json");
   const oldVersion = oldState["alpha"] as number | undefined;
 
   if (oldVersion === undefined) {
