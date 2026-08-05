@@ -3,7 +3,7 @@ import type { StepHandler } from "#src/pipeline.js";
 import type { ParsedVersion } from "#src/utils/discord-version.js";
 import { parseVersion } from "#src/utils/discord-version.js";
 import { findLatestWorkspace } from "#src/utils/workspace.js";
-import { writeState, readState } from "#src/modules/opengist/index.js";
+import { writeModulesMap, writeState, readState } from "#src/modules/opengist/index.js";
 import { GitService } from "./git.js";
 
 const log = logger.child({ module: "state-writer" });
@@ -53,6 +53,12 @@ export const stateWriter: StepHandler = async (ctx) => {
   });
 
   log.info("State saved to Opengist");
+
+  const modulesMap = ctx.state["modulesMap"];
+  if (modulesMap !== undefined) {
+    await writeModulesMap(modulesMap);
+    log.info("Modules map saved to Opengist");
+  }
 
   return ctx;
 };

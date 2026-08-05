@@ -7,7 +7,7 @@
     "#src/*": "./src/*"
   },
   "scripts": {
-    "dev": "node --env-file=.env --import tsx/esm --watch src/index.ts --steps version-check,scraper,unpacker,debundler,state-writer",
+    "dev": "node --env-file=.env --import tsx/esm --watch src/index.ts --steps version-check,scraper,unpacker,debundler,patcher,state-writer",
     "start": "tsx src/index.ts",
     "setup": "node scripts/download-hermes-decomp.js",
     "typecheck": "tsc --noEmit",
