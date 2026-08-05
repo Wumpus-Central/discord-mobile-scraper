@@ -36,7 +36,7 @@ export const fixNumericImports: Transform = (content, filePath, state) => {
     if (!entry) return _fullMatch as string;
 
     const target = resolvePath(entry, sourceDir);
-    return target ? `require("${target}")` : (_fullMatch as string);
+    return target ? `require("${target}") /* ${assertImportName(entry)} */` : (_fullMatch as string);
   });
 
   result = result.replaceAll(MODULE_IMPORT_RE, (_fullMatch, id1, id2) => {
