@@ -14,12 +14,10 @@ export const requireToImport: Transform = (content) => {
 
   if (imports.size === 0) return content;
 
-  let result = content;
-
-  for (const [path, hint] of imports) {
-    const exact = `require("${path}") /* ${hint} */`;
-    result = result.replaceAll(exact, hint);
-  }
+  const result = content.replaceAll(REQUIRE_HINT_RE, (_fullMatch, path, hint) => {
+    if (path && hint && imports.get(path) === hint) return hint;
+    return _fullMatch as string;
+  });
 
   const sorted = [...imports].sort(([a], [b]) => a.localeCompare(b));
   const importStatements = sorted.map(([path, hint]) => `import { ${hint} } from "${path}";`).join("\n");
