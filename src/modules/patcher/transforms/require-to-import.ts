@@ -22,8 +22,16 @@ export const requireToImport: Transform = (content) => {
   }
 
   const sorted = [...imports].sort(([a], [b]) => a.localeCompare(b));
-
   const importStatements = sorted.map(([path, hint]) => `import { ${hint} } from "${path}";`).join("\n");
 
-  return `${importStatements}\n${result}`;
+  const lines = result.split("\n");
+  const tail = lines.findLastIndex((l) => /^\s*import\s/.test(l));
+
+  if (tail !== -1) {
+    lines.splice(tail + 1, 0, importStatements);
+  } else {
+    lines.splice(1, 0, importStatements);
+  }
+
+  return lines.join("\n");
 };
