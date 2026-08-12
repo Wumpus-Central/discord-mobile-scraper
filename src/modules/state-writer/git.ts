@@ -4,39 +4,69 @@ import { logger } from "#src/logger.js";
 
 const log = logger.child({ module: "state-writer" });
 
+interface GitErrorWithTask extends Error {
+  task?: { commands: string[] };
+}
+
 export class GitService {
   private g: SimpleGit;
+  private token: string;
+  private authHeader: string;
 
-  constructor(sourcePath: string) {
+  constructor(sourcePath: string, token: string) {
     this.g = simpleGit(sourcePath);
+    this.token = token;
+    this.authHeader = `Authorization: Basic ${Buffer.from(`x-access-token:${token}`).toString("base64")}`;
+  }
+
+  private async raw(args: string[]): Promise<unknown> {
+    try {
+      return await this.g.raw(["-c", `http.extraHeader=${this.authHeader}`, ...args]);
+    } catch (err) {
+      this.redactCredentials(err);
+      throw err;
+    }
+  }
+
+  private redactCredentials(err: unknown): void {
+    if (!(err instanceof Error)) return;
+
+    err.message = err.message.replaceAll(this.token, "[REDACTED]").replaceAll(this.authHeader, "[REDACTED]");
+
+    const task = (err as GitErrorWithTask).task;
+    if (task) {
+      task.commands = task.commands.map((command) =>
+        command.includes(this.token) || command.includes(this.authHeader) ? "[REDACTED]" : command,
+      );
+    }
   }
 
   async init(remote: string): Promise<void> {
-    await this.g.raw(["init"]);
-    await this.g.raw(["config", "user.name", "github-actions[bot]"]);
-    await this.g.raw(["config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"]);
+    await this.raw(["init"]);
+    await this.raw(["config", "user.name", "github-actions[bot]"]);
+    await this.raw(["config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"]);
 
     try {
-      await this.g.raw(["remote", "add", "origin", remote]);
+      await this.raw(["remote", "add", "origin", remote]);
     } catch (err) {
       if ((err as Error).message.includes("already exists")) {
-        await this.g.raw(["remote", "set-url", "origin", remote]);
+        await this.raw(["remote", "set-url", "origin", remote]);
       } else {
         throw err;
       }
     }
 
     try {
-      await this.g.raw(["fetch", "--depth", "1", "--filter=blob:none", "origin", "main"]);
-      await this.g.raw(["reset", "FETCH_HEAD"]);
+      await this.raw(["fetch", "--depth", "1", "--filter=blob:none", "origin", "main"]);
+      await this.raw(["reset", "FETCH_HEAD"]);
     } catch {
       log.info("No existing remote history — first push");
     }
   }
 
   async addAndCommit(message: string): Promise<boolean> {
-    await this.g.raw(["add", "."]);
-    await this.g.raw(["reset", "_runtime/"]);
+    await this.raw(["add", "."]);
+    await this.raw(["reset", "_runtime/"]);
 
     const sourceOk = await this.commit(message);
     const runtimeOk = await this.commit(`${message} runtime`, ["_runtime/"]);
@@ -46,11 +76,11 @@ export class GitService {
 
   private async commit(message: string, addArgs?: string[]): Promise<boolean> {
     if (addArgs) {
-      await this.g.raw(["add", ...addArgs]);
+      await this.raw(["add", ...addArgs]);
     }
 
     try {
-      await this.g.raw(["commit", "-m", message]);
+      await this.raw(["commit", "-m", message]);
       return true;
     } catch (err) {
       if ((err as Error).message.includes("nothing to commit")) {
@@ -61,7 +91,7 @@ export class GitService {
   }
 
   async push(branch: string): Promise<void> {
-    await this.g.raw(["branch", "-M", branch]);
-    await this.g.raw(["push", "origin", branch]);
+    await this.raw(["branch", "-M", branch]);
+    await this.raw(["push", "origin", branch]);
   }
 }

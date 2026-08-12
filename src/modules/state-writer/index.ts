@@ -27,11 +27,11 @@ export const stateWriter: StepHandler = async (ctx) => {
     throw new Error("GH_TOKEN is not set");
   }
 
-  const remote = `https://x-access-token:${token}@github.com/Wumpus-Central/discord-mobile-datamining.git`;
+  const remote = "https://github.com/Wumpus-Central/discord-mobile-datamining.git";
 
   log.info("Pushing source tree to Wumpus-Central/discord-mobile-datamining");
 
-  const git = new GitService(sourcePath);
+  const git = new GitService(sourcePath, token);
   await git.init(remote);
 
   const hasChanges = await git.addAndCommit(commitMessage(version));
