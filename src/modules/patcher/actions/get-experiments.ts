@@ -80,6 +80,20 @@ function findExperiments(content: string, regex: RegExp): Record<string, unknown
   return results;
 }
 
+function sortExperiments(records: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(records).sort(([a], [b]) => {
+      const dateA = a.slice(0, 7);
+      const dateB = b.slice(0, 7);
+      if (dateA !== dateB) return dateB.localeCompare(dateA);
+
+      const suffixA = a.slice(8);
+      const suffixB = b.slice(8);
+      return suffixA.localeCompare(suffixB);
+    }),
+  );
+}
+
 export const getExperiments: Action = async (sourceDir) => {
   log.info("Extracting experiments");
 
@@ -96,7 +110,10 @@ export const getExperiments: Action = async (sourceDir) => {
     Object.assign(apexExperiments, findExperiments(content, APEX_EXPERIMENT_RE));
   }
 
-  const result = { experiments, "apex-experiments": apexExperiments };
+  const result = {
+    experiments: sortExperiments(experiments),
+    "apex-experiments": sortExperiments(apexExperiments),
+  };
 
   log.info(
     { experiments: Object.keys(experiments).length, apex: Object.keys(apexExperiments).length },
