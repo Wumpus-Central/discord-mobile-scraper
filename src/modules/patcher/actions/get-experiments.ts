@@ -57,19 +57,52 @@ function jsToJson(objLiteral: string): unknown | null {
   }
 }
 
-function findExperiments(content: string, regex: RegExp): Record<string, unknown> {
+function extractPartial(text: string, isApex: boolean): Record<string, unknown> | null {
+  const record: Record<string, unknown> = { partial: true };
+  const textSafe = text ?? "";
+
+  if (isApex) {
+    const name = textSafe.match(/name:\s*["']([^"']+)["']/)?.[1];
+    if (!name) return null;
+    record["name"] = name;
+    record["kind"] = textSafe.match(/kind:\s*["']([^"']+)["']/)?.[1] ?? "?";
+  } else {
+    const id = textSafe.match(/id:\s*["']([^"']+)["']/)?.[1];
+    if (!id) return null;
+    record["id"] = id;
+    record["kind"] = textSafe.match(/kind:\s*["']([^"']+)["']/)?.[1] ?? "?";
+    const label = textSafe.match(/label:\s*["']([^"']+)["']/)?.[1];
+    if (label) record["label"] = label;
+  }
+
+  return record;
+}
+
+function findExperiments(content: string, regex: RegExp, isApex: boolean): Record<string, unknown> {
   const results: Record<string, unknown> = {};
 
   for (const match of content.matchAll(regex)) {
     const start = match.index ?? 0;
     const objLiteral = extractObjectLiteral(content, start + match[0].length);
 
-    if (!objLiteral) continue;
+    let record: Record<string, unknown> | null = null;
 
-    const parsed = jsToJson(objLiteral);
-    if (!parsed || typeof parsed !== "object" || parsed === null) continue;
+    if (objLiteral) {
+      const parsed = jsToJson(objLiteral);
+      if (parsed && typeof parsed === "object" && parsed !== null) {
+        record = parsed as Record<string, unknown>;
+      } else {
+        record = extractPartial(objLiteral, isApex);
+        if (record) log.info("Partial extraction from object literal");
+      }
+    }
 
-    const record = parsed as Record<string, unknown>;
+    if (!record) {
+      record = extractPartial(content, isApex);
+      if (record) log.info("Partial extraction from file scan");
+    }
+
+    if (!record) continue;
 
     const key = (record["id"] ?? record["name"]) as string | undefined;
     if (!key) continue;
@@ -106,8 +139,8 @@ export const getExperiments: Action = async (sourceDir) => {
     const filePath = join(sourceDir, relPath);
     const content = await readFile(filePath, "utf8");
 
-    Object.assign(experiments, findExperiments(content, EXPERIMENT_RE));
-    Object.assign(apexExperiments, findExperiments(content, APEX_EXPERIMENT_RE));
+    Object.assign(experiments, findExperiments(content, EXPERIMENT_RE, false));
+    Object.assign(apexExperiments, findExperiments(content, APEX_EXPERIMENT_RE, true));
   }
 
   const result = {
