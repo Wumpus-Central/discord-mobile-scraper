@@ -22,3 +22,4 @@ jobs:
           OPENGIST_TOKEN: ${{ secrets.OPENGIST_TOKEN }}
           OPENGIST_GIST_ID: ${{ secrets.OPENGIST_GIST_ID }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          WEBHOOK_DISCORD_UNI: ${{ secrets.WEBHOOK_DISCORD_UNI }}

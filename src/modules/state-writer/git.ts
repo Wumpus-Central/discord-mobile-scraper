@@ -64,14 +64,19 @@ export class GitService {
     }
   }
 
-  async addAndCommit(message: string): Promise<boolean> {
+  async addAndCommit(message: string): Promise<{ hasChanges: boolean; sourceHash: string | null }> {
     await this.raw(["add", "."]);
     await this.raw(["reset", "_runtime/"]);
 
     const sourceOk = await this.commit(message);
+    let sourceHash: string | null = null;
+    if (sourceOk) {
+      sourceHash = String(await this.raw(["rev-parse", "HEAD"])).trim();
+    }
+
     const runtimeOk = await this.commit(`${message} runtime`, ["_runtime/"]);
 
-    return sourceOk || runtimeOk;
+    return { hasChanges: sourceOk || runtimeOk, sourceHash };
   }
 
   private async commit(message: string, addArgs?: string[]): Promise<boolean> {

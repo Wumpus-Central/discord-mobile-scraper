@@ -5,6 +5,7 @@ import { unpacker } from "#src/modules/unpacker/index.js";
 import { debundler } from "#src/modules/debundler/index.js";
 import { patcher } from "#src/modules/patcher/index.js";
 import { stateWriter } from "#src/modules/state-writer/index.js";
+import { discordNotifier } from "#src/modules/discord-notifier/index.js";
 import { parseSteps } from "#src/utils/args.js";
 
 const pipeline = new Pipeline()
@@ -13,6 +14,7 @@ const pipeline = new Pipeline()
   .step("unpacker", unpacker)
   .step("debundler", debundler)
   .step("patcher", patcher)
-  .step("state-writer", stateWriter);
+  .step("state-writer", stateWriter)
+  .step("discord-notifier", discordNotifier);
 
 await pipeline.run(parseSteps(process.argv));

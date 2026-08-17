@@ -127,7 +127,7 @@ function sortExperiments(records: Record<string, unknown>): Record<string, unkno
   );
 }
 
-export const getExperiments: Action = async (sourceDir) => {
+export const getExperiments: Action = async (sourceDir, state) => {
   log.info("Extracting experiments");
 
   const paths = (await readdir(sourceDir, { recursive: true })).filter((p) => /\.(js|tsx?)$/.test(p));
@@ -152,6 +152,11 @@ export const getExperiments: Action = async (sourceDir) => {
     { experiments: Object.keys(experiments).length, apex: Object.keys(apexExperiments).length },
     "Experiments extracted",
   );
+
+  state["experimentsCount"] = {
+    old: Object.keys(experiments).length,
+    apex: Object.keys(apexExperiments).length,
+  };
 
   await saveGist("experiments.json", result);
   log.info("Experiments saved to Opengist");

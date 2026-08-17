@@ -34,14 +34,16 @@ export const stateWriter: StepHandler = async (ctx) => {
   const git = new GitService(sourcePath, token);
   await git.init(remote);
 
-  const hasChanges = await git.addAndCommit(commitMessage(version));
-  if (!hasChanges) {
+  const result = await git.addAndCommit(commitMessage(version));
+  if (!result.hasChanges) {
     log.info("No changes to commit — skipping push");
     return ctx;
   }
 
   await git.push("main");
   log.info("Pushed to GitHub");
+
+  ctx.state["sourceCommit"] = result.sourceHash;
 
   const existing = await readGist<Record<string, unknown>>("versions.json").catch((): Record<string, unknown> => ({}));
 
