@@ -8,7 +8,9 @@ interface ModuleEntry {
 }
 
 const NUMERIC_REQUIRE_RE = /(?:require|importDefault)\((\d+)\)(?:\s*\/\*\s*\S+\s*\*\/)?/g;
-const MODULE_IMPORT_RE = /import module_(\d+) from "module_(\d+)"/g;
+const MODULE_IMPORT_RE = /import module_(\d+) from "module_(\d+)"(?:\s*\/\*\s*\d+\s*\*\/)?/g;
+const ID_IMPORT_RE = /^(\s*import\s+[\s\S]*?\sfrom\s+)"([^"]+)"\s*\/\*\s*(\d+)\s*\*\/\s*;?\s*$/;
+const ID_SIDE_EFFECT_IMPORT_RE = /^(\s*import\s+)"([^"]+)"\s*\/\*\s*(\d+)\s*\*\/\s*;?\s*$/;
 
 function assertImportName(entry: ModuleEntry): string {
   if (entry.module === "?") {
@@ -20,6 +22,22 @@ function assertImportName(entry: ModuleEntry): string {
 function resolvePath(entry: ModuleEntry, sourceDir: string): string | null {
   const normalized = entry.path.startsWith("./") ? entry.path.slice(2) : entry.path;
   return relative(sourceDir, normalized);
+}
+
+function resolveIdImport(line: string, map: Record<string, ModuleEntry>, sourceDir: string): string {
+  for (const re of [ID_IMPORT_RE, ID_SIDE_EFFECT_IMPORT_RE]) {
+    const match = re.exec(line);
+    if (!match) continue;
+
+    const prefix = match[1] ?? "";
+    const moduleId = match[3] ?? "";
+    const entry = map[moduleId];
+    if (!entry) return line;
+
+    const target = resolvePath(entry, sourceDir);
+    return target ? `${prefix}"${target}";` : line;
+  }
+  return line;
 }
 
 export const fixNumericImports: Transform = (content, filePath, state) => {
@@ -49,6 +67,11 @@ export const fixNumericImports: Transform = (content, filePath, state) => {
     const target = resolvePath(entry, sourceDir);
     return `import ${name} from "${target}"`;
   });
+
+  result = result
+    .split("\n")
+    .map((line) => resolveIdImport(line, map, sourceDir))
+    .join("\n");
 
   return result;
 };
