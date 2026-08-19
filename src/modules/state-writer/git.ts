@@ -8,6 +8,11 @@ interface GitErrorWithTask extends Error {
   task?: { commands: string[] };
 }
 
+interface PushResult {
+  hasChanges: boolean;
+  sourceHash: string | null;
+}
+
 export class GitService {
   private g: SimpleGit;
   private token: string;
@@ -17,6 +22,17 @@ export class GitService {
     this.g = simpleGit(sourcePath);
     this.token = token;
     this.authHeader = `Authorization: Basic ${Buffer.from(`x-access-token:${token}`).toString("base64")}`;
+  }
+
+  async pushToBranch(remote: string, branch: string, message: string): Promise<PushResult> {
+    await this.init(remote, branch);
+
+    const result = await this.addAndCommit(message);
+    if (result.hasChanges) {
+      await this.push(branch);
+    }
+
+    return result;
   }
 
   private async raw(args: string[]): Promise<unknown> {
@@ -41,7 +57,7 @@ export class GitService {
     }
   }
 
-  async init(remote: string): Promise<void> {
+  private async init(remote: string, branch: string): Promise<void> {
     await this.raw(["init"]);
     await this.raw(["config", "user.name", "github-actions[bot]"]);
     await this.raw(["config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"]);
@@ -57,14 +73,14 @@ export class GitService {
     }
 
     try {
-      await this.raw(["fetch", "--depth", "1", "--filter=blob:none", "origin", "main"]);
+      await this.raw(["fetch", "--depth", "1", "--filter=blob:none", "origin", branch]);
       await this.raw(["reset", "FETCH_HEAD"]);
     } catch {
       log.info("No existing remote history — first push");
     }
   }
 
-  async addAndCommit(message: string): Promise<{ hasChanges: boolean; sourceHash: string | null }> {
+  private async addAndCommit(message: string): Promise<PushResult> {
     await this.raw(["add", "."]);
     await this.raw(["reset", "_runtime/"]);
 
@@ -85,8 +101,8 @@ export class GitService {
     }
 
     try {
-      await this.raw(["commit", "-m", message]);
-      return true;
+      const output = String(await this.raw(["commit", "-m", message]));
+      return !output.includes("nothing to commit");
     } catch (err) {
       if ((err as Error).message.includes("nothing to commit")) {
         return false;
@@ -95,8 +111,7 @@ export class GitService {
     }
   }
 
-  async push(branch: string): Promise<void> {
-    await this.raw(["branch", "-M", branch]);
-    await this.raw(["push", "origin", branch]);
+  private async push(branch: string): Promise<void> {
+    await this.raw(["push", "origin", `HEAD:${branch}`]);
   }
 }

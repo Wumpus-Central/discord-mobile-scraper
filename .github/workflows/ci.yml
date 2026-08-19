@@ -23,3 +23,5 @@ jobs:
           OPENGIST_GIST_ID: ${{ secrets.OPENGIST_GIST_ID }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           WEBHOOK_DISCORD_UNI: ${{ secrets.WEBHOOK_DISCORD_UNI }}
+          # TEMP: unpatched debug branch — remove with TEMP_SHOULD_PUSH_TO_UNPATCHED_BRANCH
+          TEMP_SHOULD_PUSH_TO_UNPATCHED_BRANCH: ${{ vars.TEMP_SHOULD_PUSH_TO_UNPATCHED_BRANCH }}

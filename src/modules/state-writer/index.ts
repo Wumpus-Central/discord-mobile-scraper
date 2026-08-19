@@ -1,3 +1,6 @@
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+
 import { logger } from "#src/logger.js";
 import type { StepHandler } from "#src/pipeline.js";
 import type { ParsedVersion } from "#src/utils/discord-version.js";
@@ -5,6 +8,9 @@ import { parseVersion } from "#src/utils/discord-version.js";
 import { findLatestWorkspace } from "#src/utils/workspace.js";
 import { readGist, saveGist } from "#src/modules/opengist/index.js";
 import { GitService } from "./git.js";
+
+// TEMP: unpatched debug branch — remove with TEMP_SHOULD_PUSH_TO_UNPATCHED_BRANCH
+const TEMP_SHOULD_PUSH_TO_UNPATCHED_BRANCH = process.env["TEMP_SHOULD_PUSH_TO_UNPATCHED_BRANCH"] === "true";
 
 const log = logger.child({ module: "state-writer" });
 
@@ -30,17 +36,37 @@ export const stateWriter: StepHandler = async (ctx) => {
   const remote = "https://github.com/Wumpus-Central/discord-mobile-datamining.git";
 
   log.info("Pushing source tree to Wumpus-Central/discord-mobile-datamining");
+  log.debug(`Unpatched branch push enabled: ${TEMP_SHOULD_PUSH_TO_UNPATCHED_BRANCH}`);
 
   const git = new GitService(sourcePath, token);
-  await git.init(remote);
+  const result = await git.pushToBranch(remote, "main", commitMessage(version));
 
-  const result = await git.addAndCommit(commitMessage(version));
+  // TEMP: unpatched debug branch — remove with TEMP_SHOULD_PUSH_TO_UNPATCHED_BRANCH
+  if (TEMP_SHOULD_PUSH_TO_UNPATCHED_BRANCH) {
+    try {
+      const unpatchedPath = join(dirname(sourcePath), "src-unpatched");
+      if (!existsSync(unpatchedPath)) {
+        log.warn("src-unpatched not found — skipping unpatched branch push");
+      } else {
+        log.info("Pushing unpatched tree to Wumpus-Central/discord-mobile-datamining (branch: unpatched)");
+        const unpatchedGit = new GitService(unpatchedPath, token);
+        const unpatchedResult = await unpatchedGit.pushToBranch(remote, "unpatched", commitMessage(version));
+        log.info(
+          unpatchedResult.hasChanges
+            ? "Pushed unpatched tree to origin/unpatched"
+            : "No unpatched changes — branch up to date",
+        );
+      }
+    } catch (err) {
+      log.error(err, "Unpatched branch push failed — continuing");
+    }
+  }
+
   if (!result.hasChanges) {
     log.info("No changes to commit — skipping push");
     return ctx;
   }
 
-  await git.push("main");
   log.info("Pushed to GitHub");
 
   ctx.state["sourceCommit"] = result.sourceHash;
