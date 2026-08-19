@@ -5,19 +5,26 @@ import { resolve } from "node:path";
 import { execSync } from "node:child_process";
 
 const REPO = "SymbioticSec/hermes-decomp";
-const API_URL = `https://api.github.com/repos/${REPO}/releases/latest`;
+const tag = process.env["HERMES_DECOMP_TAG"] || "latest";
+const API_URL =
+  tag === "latest"
+    ? `https://api.github.com/repos/${REPO}/releases/latest`
+    : `https://api.github.com/repos/${REPO}/releases/tags/${tag}`;
 
 async function run() {
   const response = await fetch(API_URL);
 
   if (!response.ok) {
+    if (tag !== "latest" && response.status === 404) {
+      throw new Error(`No release found for tag ${tag} — publish it first`);
+    }
     throw new Error(`Failed to get release data: ${response.status}`);
   }
 
   const release = await response.json();
-  const tag = release.tag_name;
+  const tagName = release.tag_name;
 
-  console.log(`Found latest release: ${tag}`);
+  console.log(`Found release: ${tagName}`);
 
   const platform = process.platform;
   const arch = process.arch === "arm64" ? "arm64" : "x86_64";

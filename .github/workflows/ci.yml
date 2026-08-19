@@ -16,6 +16,8 @@ jobs:
 
       - run: npm ci
       - run: npm run setup
+        env:
+          HERMES_DECOMP_TAG: ${{ vars.HERMES_DECOMP_TAG }}
       - run: npm start
         env:
           OPENGIST_URL: ${{ secrets.OPENGIST_URL }}
