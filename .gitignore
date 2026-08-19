@@ -156,3 +156,6 @@ bin/
 
 # VSCode
 .vscode
+
+# Decompilation Trashes
+index.decompiled.js

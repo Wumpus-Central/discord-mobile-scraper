@@ -7,7 +7,15 @@ interface ModuleEntry {
   path: string;
 }
 
-const NUMERIC_REQUIRE_RE = /(?:require|importDefault)\((\d+)\)(?:\s*\/\*\s*\S+\s*\*\/)?/g;
+// hermes-decomp v0.2.3 renders escaped factory roles as `_require(123)`, which the
+// plain `require` pattern misses. Non-chained calls take a `/* name */` comment via the
+// lookahead pass first; chained accesses (`_require(71).foo()`) are fixed in the second
+// pass without a comment, because `require("x") /* name */.foo()` is invalid JS.
+const NUMERIC_REQUIRE_SAFE_RE = /(?:_?require|importDefault)\((\d+)\)(?:\s*\/\*\s*\S+\s*\*\/)?(?!\s*\.)/g;
+const NUMERIC_REQUIRE_RE = /(?:_?require|importDefault)\((\d+)\)(?:\s*\/\*\s*\S+\s*\*\/)?/g;
+// hermes-decomp v0.2.3 also emits string-specifier requires of module names
+// (`require("module_16")`); the numeric id embedded in the name maps to a real path.
+const STRING_MODULE_REQUIRE_RE = /require\("module_(\d+)"\)/g;
 const MODULE_IMPORT_RE = /import module_(\d+) from "module_(\d+)"(?:\s*\/\*\s*\d+\s*\*\/)?/g;
 const ID_IMPORT_RE = /^(\s*import\s+[\s\S]*?\sfrom\s+)"([^"]+)"\s*\/\*\s*(\d+)\s*\*\/\s*;?\s*$/;
 const ID_SIDE_EFFECT_IMPORT_RE = /^(\s*import\s+)"([^"]+)"\s*\/\*\s*(\d+)\s*\*\/\s*;?\s*$/;
@@ -22,6 +30,22 @@ function assertImportName(entry: ModuleEntry): string {
 function resolvePath(entry: ModuleEntry, sourceDir: string): string | null {
   const normalized = entry.path.startsWith("./") ? entry.path.slice(2) : entry.path;
   return relative(sourceDir, normalized);
+}
+
+function requireTarget(
+  map: Record<string, ModuleEntry>,
+  sourceDir: string,
+  withName: boolean,
+): (fullMatch: string, moduleId: string) => string {
+  return (fullMatch, moduleId) => {
+    const entry = map[moduleId];
+    if (!entry) return fullMatch;
+
+    const target = resolvePath(entry, sourceDir);
+    if (!target) return fullMatch;
+
+    return withName ? `require("${target}") /* ${assertImportName(entry)} */` : `require("${target}")`;
+  };
 }
 
 function resolveIdImport(line: string, map: Record<string, ModuleEntry>, sourceDir: string): string {
@@ -49,13 +73,9 @@ export const fixNumericImports: Transform = (content, filePath, state) => {
 
   const sourceDir = dirname(relPath);
 
-  let result = content.replaceAll(NUMERIC_REQUIRE_RE, (_fullMatch, moduleId) => {
-    const entry = map[moduleId as string];
-    if (!entry) return _fullMatch as string;
-
-    const target = resolvePath(entry, sourceDir);
-    return target ? `require("${target}") /* ${assertImportName(entry)} */` : (_fullMatch as string);
-  });
+  let result = content.replaceAll(NUMERIC_REQUIRE_SAFE_RE, requireTarget(map, sourceDir, true));
+  result = result.replaceAll(NUMERIC_REQUIRE_RE, requireTarget(map, sourceDir, false));
+  result = result.replaceAll(STRING_MODULE_REQUIRE_RE, requireTarget(map, sourceDir, false));
 
   result = result.replaceAll(MODULE_IMPORT_RE, (_fullMatch, id1, id2) => {
     if (id1 !== id2) return _fullMatch as string;

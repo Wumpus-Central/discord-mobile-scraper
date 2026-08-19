@@ -1,5 +1,15 @@
 import type { Transform } from "./index.js";
 
+// NOOP (hermes-decomp v0.2.3+):
+//
+// This transform converts `require("path") /* hint */` calls into hoisted ESM imports.
+// hermes-decomp v0.2.3 stopped emitting name-hint comments on string requires
+// (0 matches on the Discord bundle), so this transform matches nothing and returns
+// the content unchanged.
+//
+// Kept intentionally: if a future decompiler release restores the hint format, this
+// transform becomes live again with no code change. Remove it only after verifying
+// that the hint format is gone for good.
 const REQUIRE_HINT_RE = /require\("([^"]+)"\)\s*\/\*\s*(\S+)\s*\*\//g;
 
 export const requireToImport: Transform = (content) => {
