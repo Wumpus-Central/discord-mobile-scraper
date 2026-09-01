@@ -19,7 +19,9 @@ jobs:
       - run: npm ci
       - run: npm run setup
         env:
+          # Both fall back to latest when the repo variable is not set
           HERMES_DECOMP_TAG: ${{ vars.HERMES_DECOMP_TAG }}
+          BIOME_TAG: ${{ vars.BIOME_TAG }}
       - run: npm start
         env:
           OPENGIST_URL: ${{ secrets.OPENGIST_URL }}

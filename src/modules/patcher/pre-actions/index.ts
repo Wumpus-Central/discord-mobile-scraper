@@ -1,9 +1,9 @@
 import { getModulesMap } from "./get-modules-map.js";
 import { getExperiments } from "./get-experiments.js";
 
-export type Action = (sourceDir: string, state: Record<string, unknown>) => Promise<void>;
+export type PreAction = (sourceDir: string, state: Record<string, unknown>) => Promise<void>;
 
-export const actions = [
+export const preActions = [
   { name: "get-modules-map", run: getModulesMap },
   { name: "get-experiments", run: getExperiments },
 ];

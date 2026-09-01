@@ -3,7 +3,7 @@ import { join } from "node:path";
 
 import { logger } from "#src/logger.js";
 import { saveGist } from "#src/modules/opengist/index.js";
-import type { Action } from "./index.js";
+import type { PreAction } from "./index.js";
 
 const log = logger.child({ module: "patcher" });
 
@@ -127,7 +127,7 @@ function sortExperiments(records: Record<string, unknown>): Record<string, unkno
   );
 }
 
-export const getExperiments: Action = async (sourceDir, state) => {
+export const getExperiments: PreAction = async (sourceDir, state) => {
   log.info("Extracting experiments");
 
   const paths = (await readdir(sourceDir, { recursive: true })).filter((p) => /\.(js|tsx?)$/.test(p));

@@ -2,7 +2,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import { logger } from "#src/logger.js";
-import type { Action } from "./index.js";
+import type { PreAction } from "./index.js";
 
 const log = logger.child({ module: "patcher" });
 
@@ -14,7 +14,7 @@ interface ModuleEntry {
 
 const HEADER_RE = /^\/\/ === Module (\d+): (.+) ===$/m;
 
-export const getModulesMap: Action = async (sourceDir, state) => {
+export const getModulesMap: PreAction = async (sourceDir, state) => {
   log.info("Building modules map");
 
   const paths = (await readdir(sourceDir, { recursive: true })).filter((p) => /\.(js|tsx?)$/.test(p));

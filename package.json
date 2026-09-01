@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "node --env-file=.env --import tsx/esm --watch src/index.ts --steps version-check,scraper,unpacker,debundler,patcher,state-writer,discord-notifier",
     "start": "tsx src/index.ts",
-    "setup": "node scripts/download-hermes-decomp.js",
+    "setup": "node scripts/download-hermes-decomp.js && node scripts/download-biome.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
