@@ -18,7 +18,7 @@ export async function decompileBundle(bundlePath: string, outputPath: string): P
   log.info({ bundlePath, outputPath }, "Decompiling Hermes bundle");
 
   return new Promise((resolve, reject) => {
-    const args = ["decompile", bundlePath, "-o", outputPath];
+    const args = ["decompile", "--deep", bundlePath, "-o", outputPath];
     const stderr: string[] = [];
 
     log.info({ command: `${HERMES_DECOMP} ${args.join(" ")}` }, "Launching Hermes decompiler");
