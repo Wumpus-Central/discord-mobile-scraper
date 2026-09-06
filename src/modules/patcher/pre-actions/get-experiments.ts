@@ -1,3 +1,11 @@
+/**
+ * Scans the decompiled source for createExperiment(...) and
+ * createApexExperiment(...) calls and extracts their config objects into
+ * experiments.json on Opengist. Decompiler output is imperfect, so objects
+ * are converted JS → JSON best-effort and fall back to regex-parsed partial
+ * records (id/name/kind/label) when full parsing fails.
+ */
+
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 

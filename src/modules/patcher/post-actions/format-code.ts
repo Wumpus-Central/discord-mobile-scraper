@@ -1,3 +1,10 @@
+/**
+ * Formats patched files with Biome. Originally implemented to solve long
+ * arrays in const declarations rendered as one huge line by the decompiler;
+ * biome breaks them into readable multi-line form. Parse-error files are
+ * counted and warned about rather than failing the run.
+ */
+
 import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";

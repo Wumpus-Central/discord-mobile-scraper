@@ -1,3 +1,10 @@
+/**
+ * Builds a numeric Metro module ID → file path map from the header comments
+ * (// === Module N: name ===) the debundler writes into every file. The map
+ * is stored in ctx.state and later saved to Opengist as map.json, so consumers
+ * can resolve module numbers to source files.
+ */
+
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 
