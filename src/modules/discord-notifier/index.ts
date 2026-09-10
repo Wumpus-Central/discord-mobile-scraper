@@ -19,7 +19,7 @@ interface ExperimentsCount {
 }
 
 function formatMB(bytes: number): string {
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 }
 
 export const discordNotifier: StepHandler = async (ctx) => {
