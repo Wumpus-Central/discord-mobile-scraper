@@ -1,16 +1,21 @@
 /**
  * Scans the decompiled source for createExperiment(...) and
- * createApexExperiment(...) calls and extracts their config objects into
- * experiments.json on Opengist. Decompiler output is imperfect, so objects
- * are converted JS → JSON best-effort and fall back to regex-parsed partial
- * records (id/name/kind/label) when full parsing fails.
+ * createApexExperiment(...) calls and extracts their config objects.
+ * The result is stored in pipeline state and persisted as experiments.json
+ * by state-writer after a successful push. A diff against the previous
+ * snapshot is stored in state for the Discord notifier.
+ *
+ * Decompiler output is imperfect, so objects are converted JS → JSON
+ * best-effort and fall back to regex-parsed partial records (id/name/kind/label)
+ * when full parsing fails.
  */
 
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import { logger } from "#src/logger.js";
-import { saveGist } from "#src/modules/opengist/index.js";
+import { readGist } from "#src/modules/opengist/index.js";
+import { computeExperimentsDiff, type ExperimentsFile } from "#src/utils/experiments.js";
 import type { PreAction } from "./index.js";
 
 const log = logger.child({ module: "patcher" });
@@ -151,7 +156,7 @@ export const getExperiments: PreAction = async (sourceDir, state) => {
     Object.assign(apexExperiments, findExperiments(content, APEX_EXPERIMENT_RE, true));
   }
 
-  const result = {
+  const result: ExperimentsFile = {
     experiments: sortExperiments(experiments),
     "apex-experiments": sortExperiments(apexExperiments),
   };
@@ -166,6 +171,16 @@ export const getExperiments: PreAction = async (sourceDir, state) => {
     apex: Object.keys(apexExperiments).length,
   };
 
-  await saveGist("experiments.json", result);
-  log.info("Experiments saved to Opengist");
+  const previous = await readGist<ExperimentsFile>("experiments.json").catch(() => {
+    log.warn("No previous experiments.json in gist — diff unavailable");
+    return null;
+  });
+
+  if (previous) {
+    const diff = computeExperimentsDiff(previous, result);
+    state["experimentsDiff"] = diff;
+    log.info({ added: diff.added.length, removed: diff.removed.length }, "Experiments diff computed");
+  }
+
+  state["experimentsFile"] = result;
 };

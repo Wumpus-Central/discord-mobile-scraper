@@ -1,7 +1,9 @@
 import { logger } from "#src/logger.js";
 import type { StepHandler } from "#src/pipeline.js";
 import type { ParsedVersion } from "#src/utils/discord-version.js";
+import type { ExperimentsDiff } from "#src/utils/experiments.js";
 import { EmbedBuilder, executeWebhook } from "#src/modules/discord/index.js";
+import { buildChangesField } from "./changes-field.js";
 
 const log = logger.child({ module: "discord-notifier" });
 
@@ -27,6 +29,7 @@ export const discordNotifier: StepHandler = async (ctx) => {
   const stats = ctx.state["stats"] as Stats | undefined;
   const sourceCommit = ctx.state["sourceCommit"] as string | null | undefined;
   const experimentsCount = ctx.state["experimentsCount"] as ExperimentsCount | undefined;
+  const experimentsDiff = ctx.state["experimentsDiff"] as ExperimentsDiff | undefined;
 
   if (!version || !stats || !sourceCommit) {
     log.info("Skipping notification — missing version, stats or commit");
@@ -45,6 +48,13 @@ export const discordNotifier: StepHandler = async (ctx) => {
 
   if (experimentsCount) {
     embed.addField("Experiments", `**${experimentsCount.apex}** apex · **${experimentsCount.old}** legacy`, true);
+  }
+
+  if (experimentsDiff) {
+    const changesField = buildChangesField(experimentsDiff);
+    if (changesField) {
+      embed.addField(changesField.name, changesField.value);
+    }
   }
 
   await executeWebhook({ embeds: [embed.build()] });

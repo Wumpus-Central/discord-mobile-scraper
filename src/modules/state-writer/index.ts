@@ -88,5 +88,11 @@ export const stateWriter: StepHandler = async (ctx) => {
     log.info("Modules map saved to Opengist");
   }
 
+  const experimentsFile = ctx.state["experimentsFile"];
+  if (experimentsFile !== undefined) {
+    await saveGist("experiments.json", experimentsFile);
+    log.info("Experiments saved to Opengist");
+  }
+
   return ctx;
 };
